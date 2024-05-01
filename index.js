@@ -67,131 +67,78 @@ function calculateBehaviorMembership(behaviorValue) {
 }
 
 function applyFuzzyRules(intellectual, attitudeWork, behavior) {
- let membership = {
+ //fuzzification;
+ const membership = {
   intellectual: calculateIntellectualMembership(intellectual),
   attitudeWork: calculateAttitudeWorkMembership(attitudeWork),
   behavior: calculateBehaviorMembership(behavior),
  };
- let alphaValues = [];
- let zValues = [];
 
- // Rule 1: If intellectual is high, attitudeWork is high, and behavior is high, then Z is (0.8 * intellectual + 0.8 * attitudeWork + 0.8 * behavior + 40)
- alphaValues.push(Math.min(membership.intellectual.high, membership.attitudeWork.high, membership.behavior.high));
- zValues.push(0.8 * intellectual + 0.8 * attitudeWork + 0.8 * behavior + 40);
+ // Define a function for the common pattern in the Z value calculation
+ function calculateZValue(intellectWeight, attitudeWeight, behaviorWeight) {
+  return intellectWeight * intellectual + attitudeWeight * attitudeWork + behaviorWeight * behavior + 40;
+ }
 
- // Rule 2: If intellectual is high, attitudeWork is high, and behavior is medium, then Z is ...
- alphaValues.push(Math.min(membership.intellectual.high, membership.attitudeWork.high, membership.behavior.medium));
- zValues.push(0.8 * intellectual + 0.8 * attitudeWork + 0.7 * behavior + 40);
+ // Define the fuzzy rules with their corresponding weights
+ const rules = [
+  { levels: ["high", "high", "high"], weights: [0.8, 0.8, 0.8] },
+  { levels: ["high", "high", "medium"], weights: [0.8, 0.8, 0.7] },
+  { levels: ["high", "high", "low"], weights: [0.8, 0.8, 0.6] },
+  { levels: ["high", "medium", "high"], weights: [0.8, 0.7, 0.8] },
+  { levels: ["high", "medium", "medium"], weights: [0.8, 0.7, 0.7] },
+  { levels: ["high", "medium", "low"], weights: [0.8, 0.7, 0.6] },
+  { levels: ["high", "low", "high"], weights: [0.8, 0.6, 0.8] },
+  { levels: ["high", "low", "medium"], weights: [0.8, 0.6, 0.7] },
+  { levels: ["high", "low", "low"], weights: [0.8, 0.6, 0.6] },
+  { levels: ["medium", "high", "high"], weights: [0.7, 0.8, 0.8] },
+  { levels: ["medium", "high", "medium"], weights: [0.7, 0.8, 0.7] },
+  { levels: ["medium", "high", "low"], weights: [0.7, 0.8, 0.6] },
+  { levels: ["medium", "medium", "high"], weights: [0.7, 0.7, 0.8] },
+  { levels: ["medium", "medium", "medium"], weights: [0.7, 0.7, 0.7] },
+  { levels: ["medium", "medium", "low"], weights: [0.7, 0.7, 0.6] },
+  { levels: ["medium", "low", "high"], weights: [0.7, 0.6, 0.8] },
+  { levels: ["medium", "low", "medium"], weights: [0.7, 0.6, 0.7] },
+  { levels: ["medium", "low", "low"], weights: [0.7, 0.6, 0.6] },
+  { levels: ["low", "high", "high"], weights: [0.6, 0.8, 0.8] },
+  { levels: ["low", "high", "medium"], weights: [0.6, 0.8, 0.7] },
+  { levels: ["low", "high", "low"], weights: [0.6, 0.8, 0.6] },
+  { levels: ["low", "medium", "high"], weights: [0.6, 0.7, 0.8] },
+  { levels: ["low", "medium", "medium"], weights: [0.6, 0.7, 0.7] },
+  { levels: ["low", "medium", "low"], weights: [0.6, 0.7, 0.6] },
+  { levels: ["low", "low", "high"], weights: [0.6, 0.6, 0.8] },
+  { levels: ["low", "low", "medium"], weights: [0.6, 0.6, 0.7] },
+  { levels: ["low", "low", "low"], weights: [0.6, 0.6, 0.6] },
+ ];
 
- // Rule 3: If intellectual is high, attitudeWork is high, and behavior is low, then Z is ...
- alphaValues.push(Math.min(membership.intellectual.high, membership.attitudeWork.high, membership.behavior.low));
- zValues.push(0.8 * intellectual + 0.8 * attitudeWork + 0.6 * behavior + 40);
+ // Maps levels to a membership function
+ const levelToMembership = (intellectLevel, attitudeLevel, behaviorLevel) =>
+  Math.min(
+   membership.intellectual[intellectLevel],
+   membership.attitudeWork[attitudeLevel],
+   membership.behavior[behaviorLevel]
+  );
 
- // Rule 4: If intellectual is high, attitudeWork is medium, and behavior is high, then Z is ...
- alphaValues.push(Math.min(membership.intellectual.high, membership.attitudeWork.medium, membership.behavior.high));
- zValues.push(0.8 * intellectual + 0.7 * attitudeWork + 0.8 * behavior + 40);
+ // Apply all rules to calculate alpha and z values
+ const alphaValues = [];
+ const zValues = [];
 
- /// Rule 5: If intellectual is high, attitudeWork is medium, and behavior is medium, then Z is ...
- alphaValues.push(Math.min(membership.intellectual.high, membership.attitudeWork.medium, membership.behavior.medium));
- zValues.push(0.8 * intellectual + 0.7 * attitudeWork + 0.7 * behavior + 40);
+ rules.forEach((rule) => {
+  const { levels, weights } = rule;
+  const [intellectLevel, attitudeLevel, behaviorLevel] = levels;
+  const [intellectWeight, attitudeWeight, behaviorWeight] = weights;
 
- // Rule 6: If intellectual is high, attitudeWork is medium, and behavior is low, then Z is ...
- alphaValues.push(Math.min(membership.intellectual.high, membership.attitudeWork.medium, membership.behavior.low));
- zValues.push(0.8 * intellectual + 0.7 * attitudeWork + 0.6 * behavior + 40);
-
- // Rule 7: If intellectual is high, attitudeWork is low, and behavior is high, then Z is ...
- alphaValues.push(Math.min(membership.intellectual.high, membership.attitudeWork.low, membership.behavior.high));
- zValues.push(0.8 * intellectual + 0.6 * attitudeWork + 0.8 * behavior + 40);
-
- // Rule 8: If intellectual is high, attitudeWork is low, and behavior is medium, then Z is ...
- alphaValues.push(Math.min(membership.intellectual.high, membership.attitudeWork.low, membership.behavior.medium));
- zValues.push(0.8 * intellectual + 0.6 * attitudeWork + 0.7 * behavior + 40);
-
- // Rule 10: If intellectual is medium, attitudeWork is high, and behavior is medium, then Z is ...
- alphaValues.push(Math.min(membership.intellectual.medium, membership.attitudeWork.high, membership.behavior.medium));
- zValues.push(0.7 * intellectual + 0.8 * attitudeWork + 0.7 * behavior + 40);
-
- // Rule 11: If intellectual is medium, attitudeWork is high, and behavior is low, then Z is ...
- alphaValues.push(Math.min(membership.intellectual.medium, membership.attitudeWork.high, membership.behavior.low));
- zValues.push(0.7 * intellectual + 0.8 * attitudeWork + 0.6 * behavior + 40);
-
- // Rule 12: If intellectual is medium, attitudeWork is medium, and behavior is high, then Z is ...
- alphaValues.push(Math.min(membership.intellectual.medium, membership.attitudeWork.medium, membership.behavior.high));
- zValues.push(0.7 * intellectual + 0.7 * attitudeWork + 0.8 * behavior + 40);
-
- // Rule 13: If intellectual is medium, attitudeWork is medium, and behavior is high, then Z is ...
- alphaValues.push(Math.min(membership.intellectual.medium, membership.attitudeWork.medium, membership.behavior.medium));
- zValues.push(0.7 * intellectual + 0.7 * attitudeWork + 0.7 * behavior + 40);
-
- // Rule 14: If intellectual is medium, attitudeWork is medium, and behavior is high, then Z is ...
- alphaValues.push(Math.min(membership.intellectual.medium, membership.attitudeWork.medium, membership.behavior.low));
- zValues.push(0.7 * intellectual + 0.7 * attitudeWork + 0.6 * behavior + 40);
-
- // Rule 15: If intellectual is medium, attitudeWork is medium, and behavior is high, then Z is ...
- alphaValues.push(Math.min(membership.intellectual.medium, membership.attitudeWork.low, membership.behavior.high));
- zValues.push(0.7 * intellectual + 0.6 * attitudeWork + 0.8 * behavior + 40);
-
- // Rule 16: If intellectual is medium, attitudeWork is medium, and behavior is high, then Z is ...
- alphaValues.push(Math.min(membership.intellectual.medium, membership.attitudeWork.low, membership.behavior.medium));
- zValues.push(0.7 * intellectual + 0.6 * attitudeWork + 0.7 * behavior + 40);
-
- // Rule 17: If intellectual is medium, attitudeWork is medium, and behavior is high, then Z is ...
- alphaValues.push(Math.min(membership.intellectual.medium, membership.attitudeWork.low, membership.behavior.low));
- zValues.push(0.7 * intellectual + 0.6 * attitudeWork + 0.6 * behavior + 40);
-
- // Rule 18: If intellectual is medium, attitudeWork is medium, and behavior is high, then Z is ...
- alphaValues.push(Math.min(membership.intellectual.low, membership.attitudeWork.high, membership.behavior.high));
- zValues.push(0.6 * intellectual + 0.8 * attitudeWork + 0.8 * behavior + 40);
-
- // Rule 19: If intellectual is medium, attitudeWork is medium, and behavior is high, then Z is ...
- alphaValues.push(Math.min(membership.intellectual.low, membership.attitudeWork.high, membership.behavior.medium));
- zValues.push(0.6 * intellectual + 0.8 * attitudeWork + 0.7 * behavior + 40);
-
- // Rule 20: If intellectual is medium, attitudeWork is medium, and behavior is high, then Z is ...
- alphaValues.push(Math.min(membership.intellectual.low, membership.attitudeWork.high, membership.behavior.low));
- zValues.push(0.6 * intellectual + 0.8 * attitudeWork + 0.6 * behavior + 40);
-
- // Rule 21: If intellectual is medium, attitudeWork is medium, and behavior is high, then Z is ...
- alphaValues.push(Math.min(membership.intellectual.low, membership.attitudeWork.medium, membership.behavior.high));
- zValues.push(0.6 * intellectual + 0.7 * attitudeWork + 0.8 * behavior + 40);
-
- // Rule 22: If intellectual is medium, attitudeWork is medium, and behavior is high, then Z is ...
- alphaValues.push(Math.min(membership.intellectual.low, membership.attitudeWork.medium, membership.behavior.medium));
- zValues.push(0.6 * intellectual + 0.7 * attitudeWork + 0.7 * behavior + 40);
-
- // Rule 23: If intellectual is medium, attitudeWork is medium, and behavior is high, then Z is ...
- alphaValues.push(Math.min(membership.intellectual.low, membership.attitudeWork.medium, membership.behavior.low));
- zValues.push(0.6 * intellectual + 0.7 * attitudeWork + 0.6 * behavior + 40);
-
- // Rule 24: If intellectual is medium, attitudeWork is medium, and behavior is high, then Z is ...
- alphaValues.push(Math.min(membership.intellectual.low, membership.attitudeWork.low, membership.behavior.high));
- zValues.push(0.6 * intellectual + 0.6 * attitudeWork + 0.8 * behavior + 40);
-
- // Rule 25: If intellectual is medium, attitudeWork is medium, and behavior is high, then Z is ...
- alphaValues.push(Math.min(membership.intellectual.low, membership.attitudeWork.low, membership.behavior.medium));
- zValues.push(0.6 * intellectual + 0.6 * attitudeWork + 0.7 * behavior + 40);
-
- // Rule 26: If intellectual is medium, attitudeWork is medium, and behavior is high, then Z is ...
- alphaValues.push(Math.min(membership.intellectual.low, membership.attitudeWork.low, membership.behavior.low));
- zValues.push(0.6 * intellectual + 0.6 * attitudeWork + 0.6 * behavior + 40);
+  alphaValues.push(levelToMembership(intellectLevel, attitudeLevel, behaviorLevel));
+  zValues.push(calculateZValue(intellectWeight, attitudeWeight, behaviorWeight));
+ });
 
  return { alpha: alphaValues, z: zValues };
-}
-
-function fuzzification(intellectual, attitudeWork, behavior) {
- let membership = {
-  intellectual: calculateIntellectualMembership(intellectual),
-  attitudeWork: calculateAttitudeWorkMembership(attitudeWork),
-  behavior: calculateBehaviorMembership(behavior),
- };
- return membership;
 }
 
 function defuzzification(alphaValues, zValues) {
  let temp1 = 0,
   temp2 = 0;
  alphaValues.forEach((alpha, index) => {
-  console.log(alpha, zValues[index]);
+  // console.log(alpha, zValues[index]);
   temp1 += alpha;
   temp2 += alpha * zValues[index];
  });
@@ -205,10 +152,10 @@ function defuzzification(alphaValues, zValues) {
 // Test Cases for Fuzzy Logic Functions
 function testFuzzyLogic() {
  let testValues = [
-  // { intellectual: 10, attitudeWork: 6, behavior: 6 },
-  // { intellectual: 20, attitudeWork: 7, behavior: 5 },
-  // { intellectual: 25, attitudeWork: 10, behavior: 7 },
-  // { intellectual: 35, attitudeWork: 12, behavior: 9 },
+  { intellectual: 10, attitudeWork: 6, behavior: 6 },
+  { intellectual: 20, attitudeWork: 7, behavior: 5 },
+  { intellectual: 25, attitudeWork: 10, behavior: 7 },
+  { intellectual: 35, attitudeWork: 12, behavior: 9 },
   { intellectual: 30, attitudeWork: 12, behavior: 7 },
  ];
 
